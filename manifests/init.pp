@@ -100,13 +100,6 @@ class os_hardening (
   # system environment configuration
   # there may be differences when using kvm/lxc vs metal
 
-  # sysctl configuration doesn't work in docker:
-  $configure_sysctl = (
-    $system_environment != 'lxc' and
-    $system_environment != 'docker' and
-    $enable_sysctl_config
-  )
-
   # Defaults for specific platforms
   case $::osfamily {
     'Debian','Suse': {
@@ -208,8 +201,9 @@ class os_hardening (
     dry_run_on_unknown  => $dry_run_on_unknown,
   }
 
-  if $configure_sysctl {
+  if $enable_sysctl_config {
     class { 'os_hardening::sysctl':
+      system_environment      => $system_environment,
       enable_module_loading   => $enable_module_loading,
       load_modules            => $load_modules,
       cpu_vendor              => $cpu_vendor,

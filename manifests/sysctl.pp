@@ -10,6 +10,7 @@
 # Configures Kernel Parameters via sysctl
 #
 class os_hardening::sysctl (
+  String  $system_environment      = 'default',
   Boolean $enable_module_loading   = true,
   Array   $load_modules            = [],
   String  $cpu_vendor              = 'intel',
@@ -194,47 +195,48 @@ class os_hardening::sysctl (
   # * **64** - signalling of processes (term, kill, oom-kill)
   # * **128** - reboot/poweroff
   # * **256** - nicing of all RT tasks
-  if $enable_sysrq {
-    $limited_sysrq = String(4 + 16 + 32 + 64 + 128)
-    sysctl { 'kernel.sysrq': value => $limited_sysrq }
-  } else {
-    sysctl { 'kernel.sysrq': value => '0' }
-  }
+  if $system_environment != 'lxc' and $system_environment != 'docker' {
+    if $enable_sysrq {
+      $limited_sysrq = String(4 + 16 + 32 + 64 + 128)
+      sysctl { 'kernel.sysrq': value => $limited_sysrq }
+    } else {
+      sysctl { 'kernel.sysrq': value => '0' }
+    }
 
-  # Enable stack protection by randomizing kernel va space
-  if $enable_stack_protection {
-    sysctl { 'kernel.randomize_va_space': value => '2' }
-  } else {
-    sysctl { 'kernel.randomize_va_space': value => '0' }
-  }
-  # Prevent core dumps with SUID. These are usually only needed by developers and may contain sensitive information.
-  sysctl { 'fs.suid_dumpable': value => String(bool2num($enable_core_dump)) }
+    # Enable stack protection by randomizing kernel va space
+    if $enable_stack_protection {
+      sysctl { 'kernel.randomize_va_space': value => '2' }
+    } else {
+      sysctl { 'kernel.randomize_va_space': value => '0' }
+    }
+    # Prevent core dumps with SUID. These are usually only needed by developers and may contain sensitive information.
+    sysctl { 'fs.suid_dumpable': value => String(bool2num($enable_core_dump)) }
 
-  # configure for module hardening
-  # if modules cannot be loaded at runtime, they must all
-  # be pre-configured in initramfs
-  if $enable_module_loading == false {
-    case $::operatingsystem {
-      debian, ubuntu, cumuluslinux: {
-        file { '/etc/initramfs-tools/modules':
-          ensure  => file,
-          content => template('os_hardening/modules.erb'),
-          owner   => 'root',
-          group   => 'root',
-          mode    => '0400',
-          notify  => Exec['update-initramfs'],
-        }
+    # configure for module hardening
+    # if modules cannot be loaded at runtime, they must all
+    # be pre-configured in initramfs
+    if $enable_module_loading == false {
+      case $::operatingsystem {
+	debian, ubuntu, cumuluslinux: {
+	  file { '/etc/initramfs-tools/modules':
+	    ensure  => file,
+	    content => template('os_hardening/modules.erb'),
+	    owner   => 'root',
+	    group   => 'root',
+	    mode    => '0400',
+	    notify  => Exec['update-initramfs'],
+	  }
 
-        exec { 'update-initramfs':
-          command     => '/usr/sbin/update-initramfs -u',
-          refreshonly => true,
-        }
-      }
-      default: {
-        # TODO
+	  exec { 'update-initramfs':
+	    command     => '/usr/sbin/update-initramfs -u',
+	    refreshonly => true,
+	  }
+	}
+	default: {
+	  # TODO
+	}
       }
     }
   }
-
 }
 
