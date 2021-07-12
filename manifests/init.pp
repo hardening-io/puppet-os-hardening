@@ -38,6 +38,7 @@ class os_hardening (
   Array             $ignore_files_in_folder_to_restrict = [],
   Array             $folders_to_restrict                =
     ['/usr/local/games','/usr/local/sbin','/usr/local/bin','/usr/bin','/usr/sbin','/sbin','/bin'],
+  Boolean           $ignore_max_files_warnings          = false,
   Array             $restrict_log_dir                   =
     ['/var/log/'],
   Integer           $recurselimit                       = 5,
@@ -177,6 +178,7 @@ class os_hardening (
     ignore_restrict_log_dir            => $ignore_restrict_log_dir,
     ignore_files_in_folder_to_restrict => $ignore_files_in_folder_to_restrict,
     folders_to_restrict                => $folders_to_restrict_int,
+    ignore_max_files_warnings          => $ignore_max_files_warnings,
     restrict_log_dir                   => $restrict_log_dir,
     shadowgroup                        => $shadowgroup,
     shadowmode                         => $shadowmode,

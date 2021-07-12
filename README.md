@@ -99,6 +99,8 @@ Otherwise puppet will drop an error (duplicate resource)!
   array of system user accounts that should _not be_ hardened (password disabled and shell set to `/usr/sbin/nologin`)
 * `folders_to_restrict = ['/usr/local/games','/usr/local/sbin','/usr/local/bin','/usr/bin','/usr/sbin','/sbin','/bin']`
   folders to make sure of that group and world do not have write access to it or any of the contents
+* `ignore_max_files_warnings = false`
+  true if you do not want puppet to log max_files and performance warnings on the recursion of folders with > 1000 files eg /bin /usr/bin
 * `recurselimit = 5`
   directory depth for recursive permission check
 * `passwdqc_enabled = true`

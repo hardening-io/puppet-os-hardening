@@ -11,6 +11,7 @@
 #
 class os_hardening::minimize_access (
   Boolean $allow_change_user                    = false,
+  Boolean $ignore_max_files_warnings            = false,
   Boolean $manage_home_permissions              = false,
   Boolean $manage_log_permissions               = false,
   Boolean $manage_cron_permissions              = false,
@@ -45,6 +46,15 @@ class os_hardening::minimize_access (
     }
   }
 
+  # Whether $folders_to_restrict should issue warnings if the puppet max_files
+  # file resource exceeds the default soft limit of 1000 on recursive file
+  # resources, /bin and /usr/bin can exceed this default limit
+  if $ignore_max_files_warnings {
+    $use_max_files = -1
+  } else {
+    $use_max_files = 0
+  }
+
   # remove write permissions from path folders ($PATH) for all regular users
   # this prevents changing any system-wide command from normal users
   ensure_resources ('file',
@@ -56,6 +66,7 @@ class os_hardening::minimize_access (
       recurse                 => true,
       recurselimit            => $recurselimit,
       selinux_ignore_defaults => true,
+      max_files               => $use_max_files,
     }
   })
 # Added users with homes
